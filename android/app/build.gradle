@@ -1,13 +1,18 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
-apply plugin: "com.facebook.react"
 
-react {
-    /* Folders */
-    root = file("../../")
-    reactNativeDir = file("../../node_modules/react-native")
-    codegenDir = file("../../node_modules/@react-native/codegen")
-    appCodegenDir = file("build/generated/rncli")
+// Apply React Native plugin only if node_modules exists
+def nodeModulesExists = file("../../node_modules").exists()
+if (nodeModulesExists) {
+    apply plugin: "com.facebook.react"
+
+    react {
+        /* Folders */
+        root = file("../../")
+        reactNativeDir = file("../../node_modules/react-native")
+        codegenDir = file("../../node_modules/@react-native/codegen")
+        appCodegenDir = file("build/generated/rncli")
+    }
 }
 
 /**
@@ -58,23 +63,24 @@ android {
 }
 
 dependencies {
-    implementation("com.facebook.react:react-android")
+    if (nodeModulesExists) {
+        implementation("com.facebook.react:react-android")
 
-    if (hermesEnabled.toBoolean()) {
-        implementation("com.facebook.react:hermes-android")
-    } else {
-        implementation jscFlavor
+        if (hermesEnabled.toBoolean()) {
+            implementation("com.facebook.react:hermes-android")
+        } else {
+            implementation jscFlavor
+        }
+
+        debugImplementation("com.facebook.flipper:flipper:0.182.0")
+        debugImplementation("com.facebook.flipper:flipper-network-plugin:0.182.0") {
+            exclude group:'com.squareup.okhttp3', module:'okhttp'
+        }
+
+        debugImplementation("com.facebook.flipper:flipper-fresco-plugin:0.182.0")
+        androidTestImplementation('com.wix:detox:+')
     }
 
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-
-    debugImplementation("com.facebook.flipper:flipper:0.182.0")
-    debugImplementation("com.facebook.flipper:flipper-network-plugin:0.182.0") {
-        exclude group:'com.squareup.okhttp3', module:'okhttp'
-    }
-
-    debugImplementation("com.facebook.flipper:flipper-fresco-plugin:0.182.0")
-
-    androidTestImplementation('com.wix:detox:+')
     implementation 'androidx.appcompat:appcompat:1.6.1'
 }
