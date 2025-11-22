@@ -17,6 +17,15 @@ buildscript {
     }
 }
 
+// Set global properties for all subprojects
+subprojects {
+    ext {
+        compileSdkVersion = 34
+        minSdkVersion = 23
+        targetSdkVersion = 34
+    }
+}
+
 allprojects {
     repositories {
         maven {
