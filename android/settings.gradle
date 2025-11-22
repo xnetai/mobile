@@ -1,8 +1,10 @@
 rootProject.name = 'PerpetualTrading'
 
-// Apply React Native auto-linking
+// Include React Native Gradle Plugin FIRST
+includeBuild('../node_modules/@react-native/gradle-plugin')
+
+// Then apply React Native auto-linking
 apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle");
 applyNativeModulesSettingsGradle(settings)
 
 include ':app'
-includeBuild('../node_modules/@react-native/gradle-plugin')
