@@ -88,6 +88,29 @@ if [ $POD_EXIT_CODE -ne 0 ]; then
 fi
 log_success "CocoaPods dependencies installed"
 
+# Detect available iOS simulator
+log_info "Detecting available iOS simulators..."
+SIMULATOR_NAME=""
+
+# Try to find iPhone 15 Pro first (user's default)
+if xcrun simctl list devices available | grep -q "iPhone 15 Pro"; then
+    SIMULATOR_NAME="iPhone 15 Pro"
+# Try iPhone 15
+elif xcrun simctl list devices available | grep -q "iPhone 15"; then
+    SIMULATOR_NAME="iPhone 15"
+# Otherwise use first available iPhone
+else
+    SIMULATOR_NAME=$(xcrun simctl list devices available | grep "iPhone" | head -n 1 | sed 's/.*(\([^)]*\)).*/\1/' | xargs)
+fi
+
+if [ -z "$SIMULATOR_NAME" ]; then
+    log_error "No iOS simulator found"
+    log_error "Please create a simulator in Xcode"
+    exit 1
+fi
+
+log_success "Using simulator: $SIMULATOR_NAME"
+
 # Build iOS app
 log_info "Building iOS app with xcodebuild..."
 START_TIME=$(date +%s)
@@ -96,7 +119,7 @@ xcodebuild \
   -scheme PerpetualTrading \
   -configuration Debug \
   -sdk iphonesimulator \
-  -destination 'platform=iOS Simulator,name=iPhone 15' \
+  -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
   -derivedDataPath ios/build \
   clean build 2>&1 | tee -a "$LOG_FILE"
 BUILD_EXIT_CODE=$?
