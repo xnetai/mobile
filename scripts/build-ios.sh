@@ -96,6 +96,7 @@ xcodebuild \
   -scheme PerpetualTrading \
   -configuration Debug \
   -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,name=iPhone 15' \
   -derivedDataPath ios/build \
   clean build 2>&1 | tee -a "$LOG_FILE"
 BUILD_EXIT_CODE=$?
