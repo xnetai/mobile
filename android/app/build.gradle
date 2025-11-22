@@ -99,3 +99,9 @@ dependencies {
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation 'androidx.appcompat:appcompat:1.6.1'
 }
+
+// Apply React Native auto-linking
+if (nodeModulesExists) {
+    apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle");
+    applyNativeModulesAppBuildGradle(project)
+}
