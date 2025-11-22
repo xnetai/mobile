@@ -69,3 +69,45 @@ export interface PriceUpdate {
   price: number;
   timestamp: number;
 }
+
+// Wallet Types
+export interface Wallet {
+  address: string;
+  publicKey: string;
+  mnemonic?: string; // Only stored during creation/import
+  createdAt: number;
+}
+
+export interface WalletAsset {
+  symbol: string;
+  name: string;
+  balance: number;
+  valueUSD: number;
+  price: number;
+  change24h: number;
+  logo?: string;
+}
+
+export interface Transaction {
+  id: string;
+  type: 'send' | 'receive' | 'trade' | 'swap';
+  asset: string;
+  amount: number;
+  from: string;
+  to: string;
+  timestamp: number;
+  status: 'pending' | 'confirmed' | 'failed';
+  fee?: number;
+}
+
+export interface SpotOrder {
+  id: string;
+  asset: string;
+  side: 'buy' | 'sell';
+  type: 'market' | 'limit';
+  amount: number;
+  price?: number;
+  total: number;
+  createdAt: number;
+  status: 'pending' | 'filled' | 'cancelled';
+}
