@@ -89,26 +89,37 @@ fi
 log_success "CocoaPods dependencies installed"
 
 # Detect available iOS simulator destination
-log_info "Querying available iOS simulator destinations..."
+log_info "Detecting iOS simulator for build..."
 
-# Get available destinations from xcodebuild
-DESTINATIONS_OUTPUT=$(xcodebuild -workspace ios/PerpetualTrading.xcworkspace \
-  -scheme PerpetualTrading \
-  -showdestinations 2>&1)
+# First, check if there's a booted simulator and use it
+BOOTED_SIMULATOR_ID=$(xcrun simctl list devices | grep "iPhone" | grep "Booted" | head -n 1 | grep -o -E '\([A-F0-9-]+\)' | tr -d '()' || true)
 
-# Extract the first iOS Simulator destination ID
-DESTINATION_ID=$(echo "$DESTINATIONS_OUTPUT" | grep "platform:iOS Simulator" | grep -v "Unavailable" | head -n 1 | grep -o 'id:[A-F0-9-]*' | cut -d: -f2)
+if [ -n "$BOOTED_SIMULATOR_ID" ]; then
+    DESTINATION_ID="$BOOTED_SIMULATOR_ID"
+    SIMULATOR_NAME=$(xcrun simctl list devices | grep "$DESTINATION_ID" | sed 's/^[[:space:]]*//' | cut -d '(' -f1 | xargs)
+    log_success "Using booted simulator: $SIMULATOR_NAME (ID: $DESTINATION_ID)"
+else
+    log_info "No booted simulator found. Querying available destinations from xcodebuild..."
 
-if [ -z "$DESTINATION_ID" ]; then
-    log_error "No available iOS Simulator destination found"
-    log_error "Available destinations:"
-    echo "$DESTINATIONS_OUTPUT" | grep "platform:iOS Simulator"
-    exit 1
+    # Get available destinations from xcodebuild
+    DESTINATIONS_OUTPUT=$(xcodebuild -workspace ios/PerpetualTrading.xcworkspace \
+      -scheme PerpetualTrading \
+      -showdestinations 2>&1)
+
+    # Extract the first iOS Simulator destination ID
+    DESTINATION_ID=$(echo "$DESTINATIONS_OUTPUT" | grep "platform:iOS Simulator" | grep -v "Unavailable" | head -n 1 | grep -o 'id:[A-F0-9-]*' | cut -d: -f2)
+
+    if [ -z "$DESTINATION_ID" ]; then
+        log_error "No available iOS Simulator destination found"
+        log_error "Available destinations:"
+        echo "$DESTINATIONS_OUTPUT" | grep "platform:iOS Simulator"
+        exit 1
+    fi
+
+    # Get the name of the simulator for logging
+    DESTINATION_NAME=$(echo "$DESTINATIONS_OUTPUT" | grep "$DESTINATION_ID" | grep -o 'name:[^,]*' | cut -d: -f2 | xargs)
+    log_success "Using available simulator: $DESTINATION_NAME (ID: $DESTINATION_ID)"
 fi
-
-# Get the name of the simulator for logging
-DESTINATION_NAME=$(echo "$DESTINATIONS_OUTPUT" | grep "$DESTINATION_ID" | grep -o 'name:[^,]*' | cut -d: -f2 | xargs)
-log_success "Using simulator: $DESTINATION_NAME (ID: $DESTINATION_ID)"
 
 # Build iOS app
 log_info "Building iOS app with xcodebuild..."

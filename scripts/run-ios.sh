@@ -64,19 +64,23 @@ if [ ! -d "ios/Pods" ]; then
     log_success "CocoaPods installed"
 fi
 
-# Check if simulator is already running
+# Check if simulator is already running and get its ID
 log_info "Checking simulator status..."
-SIMULATOR_RUNNING=$(xcrun simctl list devices | grep "iPhone" | grep "Booted" || true)
+SIMULATOR_ID=$(xcrun simctl list devices | grep "iPhone" | grep "Booted" | head -n 1 | grep -o -E '\([A-F0-9-]+\)' | tr -d '()' || true)
 
-if [ -z "$SIMULATOR_RUNNING" ]; then
-    log_info "Starting iOS simulator..."
+if [ -z "$SIMULATOR_ID" ]; then
+    log_info "No booted simulator found. Starting iOS simulator..."
 
-    # Get list of available iPhone simulators
-    SIMULATOR_ID=$(xcrun simctl list devices available | grep "iPhone 15" | head -n 1 | grep -o -E '\(([A-F0-9-]+)\)' | tr -d '()')
+    # Try to find iPhone 15 Pro first, then iPhone 15, then any iPhone
+    SIMULATOR_ID=$(xcrun simctl list devices available | grep "iPhone 15 Pro" | head -n 1 | grep -o -E '\([A-F0-9-]+\)' | tr -d '()' || true)
+
+    if [ -z "$SIMULATOR_ID" ]; then
+        SIMULATOR_ID=$(xcrun simctl list devices available | grep "iPhone 15" | head -n 1 | grep -o -E '\([A-F0-9-]+\)' | tr -d '()' || true)
+    fi
 
     if [ -z "$SIMULATOR_ID" ]; then
         # Fallback to any available iPhone
-        SIMULATOR_ID=$(xcrun simctl list devices available | grep "iPhone" | head -n 1 | grep -o -E '\(([A-F0-9-]+)\)' | tr -d '()')
+        SIMULATOR_ID=$(xcrun simctl list devices available | grep "iPhone" | head -n 1 | grep -o -E '\([A-F0-9-]+\)' | tr -d '()' || true)
     fi
 
     if [ -z "$SIMULATOR_ID" ]; then
@@ -85,7 +89,7 @@ if [ -z "$SIMULATOR_RUNNING" ]; then
         exit 1
     fi
 
-    log_info "Using simulator: $SIMULATOR_ID"
+    log_info "Booting simulator: $SIMULATOR_ID"
     xcrun simctl boot "$SIMULATOR_ID"
     open -a Simulator
 
@@ -95,7 +99,9 @@ if [ -z "$SIMULATOR_RUNNING" ]; then
 
     log_success "Simulator is ready"
 else
-    log_success "Simulator is already running"
+    # Get simulator name for logging
+    SIMULATOR_NAME=$(xcrun simctl list devices | grep "$SIMULATOR_ID" | sed 's/^[[:space:]]*//' | cut -d '(' -f1 | xargs)
+    log_success "Using already booted simulator: $SIMULATOR_NAME ($SIMULATOR_ID)"
 fi
 
 # Kill any existing Metro bundler
