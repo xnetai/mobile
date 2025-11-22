@@ -26,6 +26,8 @@ def enableProguardInReleaseBuilds = false
 def jscFlavor = 'org.webkit:android-jsc:+'
 
 android {
+    // Use both old and new property names for compatibility
+    compileSdkVersion 34
     compileSdk 34
     buildToolsVersion "34.0.0"
     ndkVersion "25.1.8937393"
@@ -34,7 +36,9 @@ android {
 
     defaultConfig {
         applicationId "com.perpetualtrading"
+        minSdkVersion 23
         minSdk 23
+        targetSdkVersion 34
         targetSdk 34
         versionCode 1
         versionName "1.0"
