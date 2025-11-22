@@ -128,7 +128,6 @@ xcodebuild \
   -workspace ios/PerpetualTrading.xcworkspace \
   -scheme PerpetualTrading \
   -configuration Debug \
-  -sdk iphonesimulator \
   -destination "id=$DESTINATION_ID" \
   -derivedDataPath ios/build \
   clean build 2>&1 | tee -a "$LOG_FILE"
