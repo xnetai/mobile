@@ -88,42 +88,27 @@ if [ $POD_EXIT_CODE -ne 0 ]; then
 fi
 log_success "CocoaPods dependencies installed"
 
-# Detect available iOS simulator
-log_info "Detecting available iOS simulators..."
-SIMULATOR_ID=""
+# Detect available iOS simulator destination
+log_info "Querying available iOS simulator destinations..."
 
-# First check if any simulator is already booted
-BOOTED_SIM=$(xcrun simctl list devices | grep "Booted" | head -n 1 | grep -o -E '\(([A-F0-9-]+)\)' | tr -d '()')
+# Get available destinations from xcodebuild
+DESTINATIONS_OUTPUT=$(xcodebuild -workspace ios/PerpetualTrading.xcworkspace \
+  -scheme PerpetualTrading \
+  -showdestinations 2>&1)
 
-if [ -n "$BOOTED_SIM" ]; then
-    SIMULATOR_ID="$BOOTED_SIM"
-    SIMULATOR_NAME=$(xcrun simctl list devices | grep "$BOOTED_SIM" | sed 's/ (.*//' | xargs)
-    log_success "Using already booted simulator: $SIMULATOR_NAME"
-else
-    # Try to find iPhone 15 Pro first (user's default)
-    SIMULATOR_LINE=$(xcrun simctl list devices available | grep "iPhone 15 Pro" | head -n 1)
+# Extract the first iOS Simulator destination ID
+DESTINATION_ID=$(echo "$DESTINATIONS_OUTPUT" | grep "platform:iOS Simulator" | grep -v "Unavailable" | head -n 1 | grep -o 'id:[A-F0-9-]*' | cut -d: -f2)
 
-    # If not found, try iPhone 15
-    if [ -z "$SIMULATOR_LINE" ]; then
-        SIMULATOR_LINE=$(xcrun simctl list devices available | grep "iPhone 15" | head -n 1)
-    fi
-
-    # If still not found, use first available iPhone
-    if [ -z "$SIMULATOR_LINE" ]; then
-        SIMULATOR_LINE=$(xcrun simctl list devices available | grep "iPhone" | head -n 1)
-    fi
-
-    if [ -z "$SIMULATOR_LINE" ]; then
-        log_error "No iOS simulator found"
-        log_error "Please create a simulator in Xcode"
-        exit 1
-    fi
-
-    # Extract simulator ID and name
-    SIMULATOR_ID=$(echo "$SIMULATOR_LINE" | grep -o -E '\(([A-F0-9-]+)\)' | tr -d '()')
-    SIMULATOR_NAME=$(echo "$SIMULATOR_LINE" | sed 's/ (.*//' | xargs)
-    log_success "Using simulator: $SIMULATOR_NAME"
+if [ -z "$DESTINATION_ID" ]; then
+    log_error "No available iOS Simulator destination found"
+    log_error "Available destinations:"
+    echo "$DESTINATIONS_OUTPUT" | grep "platform:iOS Simulator"
+    exit 1
 fi
+
+# Get the name of the simulator for logging
+DESTINATION_NAME=$(echo "$DESTINATIONS_OUTPUT" | grep "$DESTINATION_ID" | grep -o 'name:[^,]*' | cut -d: -f2 | xargs)
+log_success "Using simulator: $DESTINATION_NAME (ID: $DESTINATION_ID)"
 
 # Build iOS app
 log_info "Building iOS app with xcodebuild..."
@@ -133,7 +118,7 @@ xcodebuild \
   -scheme PerpetualTrading \
   -configuration Debug \
   -sdk iphonesimulator \
-  -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+  -destination "id=$DESTINATION_ID" \
   -derivedDataPath ios/build \
   clean build 2>&1 | tee -a "$LOG_FILE"
 BUILD_EXIT_CODE=$?
