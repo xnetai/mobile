@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Run script for Perpetual Trading React Native App on Mac
+# Run script for Perpetual Trading React Native App
 # This script starts the Metro bundler and runs the app on Android emulator
+# Supports macOS, Linux, and Windows (Git Bash/WSL)
 
 set -e
 
@@ -40,20 +41,51 @@ log_warning() {
     echo -e "${YELLOW}⚠${NC} $(date '+%H:%M:%S') - $1"
 }
 
-# Check if we're on macOS
-log_info "Checking platform..."
-if [[ "$OSTYPE" != "darwin"* ]]; then
-    log_warning "This script is designed for macOS"
+# Detect platform
+log_info "Detecting platform..."
+PLATFORM="unknown"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    PLATFORM="macos"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    PLATFORM="linux"
+elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+    PLATFORM="windows"
 fi
+log_success "Platform detected: $PLATFORM"
 
 # Check if ANDROID_HOME is set
 log_info "Checking Android SDK configuration..."
 if [ -z "$ANDROID_HOME" ]; then
     log_warning "ANDROID_HOME is not set"
-    log_info "Setting ANDROID_HOME to default location..."
-    export ANDROID_HOME=$HOME/Library/Android/sdk
-    export PATH=$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools
+    log_info "Setting ANDROID_HOME to default location for $PLATFORM..."
+
+    case "$PLATFORM" in
+        "macos")
+            export ANDROID_HOME=$HOME/Library/Android/sdk
+            ;;
+        "linux")
+            export ANDROID_HOME=$HOME/Android/Sdk
+            ;;
+        "windows")
+            # Try common Windows paths
+            if [ -d "/c/Users/$USER/AppData/Local/Android/Sdk" ]; then
+                export ANDROID_HOME="/c/Users/$USER/AppData/Local/Android/Sdk"
+            elif [ -d "$HOME/AppData/Local/Android/Sdk" ]; then
+                export ANDROID_HOME="$HOME/AppData/Local/Android/Sdk"
+            else
+                log_error "Could not find Android SDK. Please set ANDROID_HOME manually"
+                exit 1
+            fi
+            ;;
+        *)
+            log_error "Unknown platform. Please set ANDROID_HOME manually"
+            exit 1
+            ;;
+    esac
 fi
+
+# Add Android SDK tools to PATH
+export PATH=$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools
 log_success "ANDROID_HOME: $ANDROID_HOME"
 
 # Check if node_modules exists
