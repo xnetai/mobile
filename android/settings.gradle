@@ -1,4 +1,10 @@
 rootProject.name = 'PerpetualTrading'
-apply from: file("../node_modules/@react-native/gradle-plugin/settings.gradle.kts")
+
+// Apply React Native Gradle plugin if available
+def rnGradlePlugin = file("../node_modules/@react-native/gradle-plugin/settings.gradle.kts")
+if (rnGradlePlugin.exists()) {
+    apply from: rnGradlePlugin
+    includeBuild('../node_modules/@react-native/gradle-plugin')
+}
+
 include ':app'
-includeBuild('../node_modules/@react-native/gradle-plugin')
