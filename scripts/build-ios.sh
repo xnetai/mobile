@@ -90,26 +90,40 @@ log_success "CocoaPods dependencies installed"
 
 # Detect available iOS simulator
 log_info "Detecting available iOS simulators..."
-SIMULATOR_NAME=""
+SIMULATOR_ID=""
 
-# Try to find iPhone 15 Pro first (user's default)
-if xcrun simctl list devices available | grep -q "iPhone 15 Pro"; then
-    SIMULATOR_NAME="iPhone 15 Pro"
-# Try iPhone 15
-elif xcrun simctl list devices available | grep -q "iPhone 15"; then
-    SIMULATOR_NAME="iPhone 15"
-# Otherwise use first available iPhone
+# First check if any simulator is already booted
+BOOTED_SIM=$(xcrun simctl list devices | grep "Booted" | head -n 1 | grep -o -E '\(([A-F0-9-]+)\)' | tr -d '()')
+
+if [ -n "$BOOTED_SIM" ]; then
+    SIMULATOR_ID="$BOOTED_SIM"
+    SIMULATOR_NAME=$(xcrun simctl list devices | grep "$BOOTED_SIM" | sed 's/ (.*//' | xargs)
+    log_success "Using already booted simulator: $SIMULATOR_NAME"
 else
-    SIMULATOR_NAME=$(xcrun simctl list devices available | grep "iPhone" | head -n 1 | sed 's/.*(\([^)]*\)).*/\1/' | xargs)
-fi
+    # Try to find iPhone 15 Pro first (user's default)
+    SIMULATOR_LINE=$(xcrun simctl list devices available | grep "iPhone 15 Pro" | head -n 1)
 
-if [ -z "$SIMULATOR_NAME" ]; then
-    log_error "No iOS simulator found"
-    log_error "Please create a simulator in Xcode"
-    exit 1
-fi
+    # If not found, try iPhone 15
+    if [ -z "$SIMULATOR_LINE" ]; then
+        SIMULATOR_LINE=$(xcrun simctl list devices available | grep "iPhone 15" | head -n 1)
+    fi
 
-log_success "Using simulator: $SIMULATOR_NAME"
+    # If still not found, use first available iPhone
+    if [ -z "$SIMULATOR_LINE" ]; then
+        SIMULATOR_LINE=$(xcrun simctl list devices available | grep "iPhone" | head -n 1)
+    fi
+
+    if [ -z "$SIMULATOR_LINE" ]; then
+        log_error "No iOS simulator found"
+        log_error "Please create a simulator in Xcode"
+        exit 1
+    fi
+
+    # Extract simulator ID and name
+    SIMULATOR_ID=$(echo "$SIMULATOR_LINE" | grep -o -E '\(([A-F0-9-]+)\)' | tr -d '()')
+    SIMULATOR_NAME=$(echo "$SIMULATOR_LINE" | sed 's/ (.*//' | xargs)
+    log_success "Using simulator: $SIMULATOR_NAME"
+fi
 
 # Build iOS app
 log_info "Building iOS app with xcodebuild..."
@@ -119,7 +133,7 @@ xcodebuild \
   -scheme PerpetualTrading \
   -configuration Debug \
   -sdk iphonesimulator \
-  -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+  -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
   -derivedDataPath ios/build \
   clean build 2>&1 | tee -a "$LOG_FILE"
 BUILD_EXIT_CODE=$?
