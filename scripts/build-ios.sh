@@ -128,7 +128,7 @@ xcodebuild \
   -workspace ios/PerpetualTrading.xcworkspace \
   -scheme PerpetualTrading \
   -configuration Debug \
-  -destination "id=$DESTINATION_ID" \
+  -destination "platform=iOS Simulator,id=$DESTINATION_ID" \
   -derivedDataPath ios/build \
   clean build 2>&1 | tee -a "$LOG_FILE"
 BUILD_EXIT_CODE=$?
