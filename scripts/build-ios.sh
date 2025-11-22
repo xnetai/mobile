@@ -78,7 +78,14 @@ log_success "CocoaPods found: $(pod --version)"
 log_info "Installing iOS dependencies (CocoaPods)..."
 cd ios
 pod install 2>&1 | tee -a "../$LOG_FILE"
+POD_EXIT_CODE=$?
 cd ..
+
+if [ $POD_EXIT_CODE -ne 0 ]; then
+    log_error "CocoaPods installation failed!"
+    log_error "Try fixing with: sudo gem install ffi --platform=ruby"
+    exit 1
+fi
 log_success "CocoaPods dependencies installed"
 
 # Build iOS app
@@ -91,8 +98,15 @@ xcodebuild \
   -sdk iphonesimulator \
   -derivedDataPath ios/build \
   clean build 2>&1 | tee -a "$LOG_FILE"
+BUILD_EXIT_CODE=$?
 END_TIME=$(date +%s)
 BUILD_DURATION=$((END_TIME - START_TIME))
+
+if [ $BUILD_EXIT_CODE -ne 0 ]; then
+    log_error "Build failed!"
+    log_error "Check log file: $LOG_FILE"
+    exit 1
+fi
 log_success "Build completed in ${BUILD_DURATION}s"
 
 # Check if build was successful

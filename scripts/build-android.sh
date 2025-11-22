@@ -100,14 +100,29 @@ chmod +x gradlew
 # Clean build
 log_info "Cleaning previous build..."
 ./gradlew clean 2>&1 | tee -a "../$LOG_FILE"
+CLEAN_EXIT_CODE=$?
+
+if [ $CLEAN_EXIT_CODE -ne 0 ]; then
+    log_error "Clean failed!"
+    cd ..
+    exit 1
+fi
 log_success "Clean completed"
 
 # Build debug APK
 log_info "Building debug APK..."
 START_TIME=$(date +%s)
 ./gradlew assembleDebug 2>&1 | tee -a "../$LOG_FILE"
+BUILD_EXIT_CODE=$?
 END_TIME=$(date +%s)
 BUILD_DURATION=$((END_TIME - START_TIME))
+
+if [ $BUILD_EXIT_CODE -ne 0 ]; then
+    log_error "Build failed!"
+    log_error "Check log file: $LOG_FILE"
+    cd ..
+    exit 1
+fi
 log_success "Build completed in ${BUILD_DURATION}s"
 
 # Check if build was successful
