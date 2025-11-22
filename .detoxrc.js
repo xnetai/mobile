@@ -9,6 +9,16 @@ module.exports = {
     },
   },
   apps: {
+    'ios.debug': {
+      type: 'ios.app',
+      binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/PerpetualTrading.app',
+      build: 'xcodebuild -workspace ios/PerpetualTrading.xcworkspace -scheme PerpetualTrading -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build',
+    },
+    'ios.release': {
+      type: 'ios.app',
+      binaryPath: 'ios/build/Build/Products/Release-iphonesimulator/PerpetualTrading.app',
+      build: 'xcodebuild -workspace ios/PerpetualTrading.xcworkspace -scheme PerpetualTrading -configuration Release -sdk iphonesimulator -derivedDataPath ios/build',
+    },
     'android.debug': {
       type: 'android.apk',
       binaryPath: 'android/app/build/outputs/apk/debug/app-debug.apk',
@@ -36,8 +46,22 @@ module.exports = {
         adbName: '.*',
       },
     },
+    'ios.simulator': {
+      type: 'ios.simulator',
+      device: {
+        type: 'iPhone 15',
+      },
+    },
   },
   configurations: {
+    'ios.sim.debug': {
+      device: 'ios.simulator',
+      app: 'ios.debug',
+    },
+    'ios.sim.release': {
+      device: 'ios.simulator',
+      app: 'ios.release',
+    },
     'android.emu.debug': {
       device: 'simulator',
       app: 'android.debug',

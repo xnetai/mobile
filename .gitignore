@@ -19,6 +19,11 @@ DerivedData
 *.ipa
 *.xcuserstate
 ios/.xcode.env.local
+ios/build/
+ios/Pods/
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+!*.xcworkspace/xcshareddata
 
 # Android/IntelliJ
 build/

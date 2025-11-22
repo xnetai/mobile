@@ -7,12 +7,17 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
-    "test:e2e": "detox test --configuration android.emu.debug",
-    "build:e2e": "detox build --configuration android.emu.debug",
+    "test:e2e:android": "detox test --configuration android.emu.debug",
+    "test:e2e:ios": "detox test --configuration ios.sim.debug",
+    "build:e2e:android": "detox build --configuration android.emu.debug",
+    "build:e2e:ios": "detox build --configuration ios.sim.debug",
     "lint": "eslint .",
-    "build:android": "./scripts/build.sh",
-    "run:android": "./scripts/run.sh",
-    "test:full": "./scripts/test.sh"
+    "build:android": "./scripts/build-android.sh",
+    "build:ios": "./scripts/build-ios.sh",
+    "run:android": "./scripts/run-android.sh",
+    "run:ios": "./scripts/run-ios.sh",
+    "test:android": "./scripts/test-android.sh",
+    "test:ios": "./scripts/test-ios.sh"
   },
   "dependencies": {
     "react": "18.2.0",
