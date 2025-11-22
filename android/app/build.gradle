@@ -27,19 +27,20 @@ def jscFlavor = 'org.webkit:android-jsc:+'
 
 android {
     // Use both old and new property names for compatibility
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    compileSdk rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
-    ndkVersion rootProject.ext.ndkVersion
+    // Set explicit values as fallback for Windows compatibility
+    compileSdkVersion rootProject.ext.has("compileSdkVersion") ? rootProject.ext.compileSdkVersion : 34
+    compileSdk rootProject.ext.has("compileSdkVersion") ? rootProject.ext.compileSdkVersion : 34
+    buildToolsVersion rootProject.ext.has("buildToolsVersion") ? rootProject.ext.buildToolsVersion : "34.0.0"
+    ndkVersion rootProject.ext.has("ndkVersion") ? rootProject.ext.ndkVersion : "25.1.8937393"
 
     namespace "com.perpetualtrading"
 
     defaultConfig {
         applicationId "com.perpetualtrading"
-        minSdkVersion rootProject.ext.minSdkVersion
-        minSdk rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        targetSdk rootProject.ext.targetSdkVersion
+        minSdkVersion rootProject.ext.has("minSdkVersion") ? rootProject.ext.minSdkVersion : 23
+        minSdk rootProject.ext.has("minSdkVersion") ? rootProject.ext.minSdkVersion : 23
+        targetSdkVersion rootProject.ext.has("targetSdkVersion") ? rootProject.ext.targetSdkVersion : 34
+        targetSdk rootProject.ext.has("targetSdkVersion") ? rootProject.ext.targetSdkVersion : 34
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

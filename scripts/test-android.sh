@@ -171,7 +171,18 @@ fi
 
 # Kill any existing Metro bundler
 log_info "Cleaning up existing Metro bundler..."
-lsof -ti:8081 | xargs kill -9 2>/dev/null || true
+case "$PLATFORM" in
+    "windows")
+        # On Windows, use netstat and taskkill
+        for pid in $(netstat -ano | grep ":8081" | awk '{print $5}' | sort -u); do
+            taskkill //PID $pid //F 2>/dev/null || true
+        done
+        ;;
+    *)
+        # On macOS/Linux, use lsof
+        lsof -ti:8081 | xargs kill -9 2>/dev/null || true
+        ;;
+esac
 
 # Start Metro bundler in background
 log_info "Starting Metro bundler..."
